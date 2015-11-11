@@ -1,2 +1,3 @@
 # firehose-stats
-Provides terminal statistics for the firehose
+
+This is a plugin for the Cloud Foundry CLI to provide real time metrics and statistics from the firehose.
