@@ -1,7 +1,8 @@
-package stats
+package main
 import (
 	"github.com/cloudfoundry/cli/cf/terminal"
 	"github.com/cloudfoundry/cli/plugin"
+	"os"
 )
 
 type FirehoseStatsCmd struct {
@@ -29,7 +30,7 @@ func (s *FirehoseStatsCmd) GetMetadata() plugin.PluginMetadata {
 			{
 				Name: "firehose-stats",
 				Alias: "firestats",
-				HelpText: "Displays real time statistics from the Firehose.\n Must be logged in as an admin user.",
+				HelpText: "Displays real time statistics from the Firehose. Must be logged in as an admin user.",
 				UsageDetails: plugin.Usage{
 					Usage: "cf firehose-stats",
 					Options: map[string]string {
@@ -43,5 +44,11 @@ func (s *FirehoseStatsCmd) GetMetadata() plugin.PluginMetadata {
 
 func (s *FirehoseStatsCmd) Run( cliConnection plugin.CliConnection, args []string) {
 
-	if args[]
+	if args[0] != "firehose-stats" {
+		return
+	}
+
+	s.cfUI = terminal.NewUI(os.Stdin, terminal.NewTeePrinter())
+
+	s.cfUI.Say("This is the firehose stats command")
 }
