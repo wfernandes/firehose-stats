@@ -19,10 +19,10 @@ func (m *NotesChart) Init() {
 	m.sentByIP = make(map[string]int)
 	m.receivedByIP = make(map[string]int)
 
-	m.graph = termui.NewPar("Firehose Statistics Plugin\n [Press q](fg-red) to exit.")
+	m.graph = termui.NewPar("Firehose Statistics Plugin\nPivotal Hackday Project Dec 18, 2015\nAuthors: Warren Fernandes & Tom Chen\n\n[Press q](fg-red) to exit.")
 
 //	m.graph.Width = 50
-	m.graph.Height = 7
+	m.graph.Height = 8
 	m.graph.BorderLabel = "Notes"
 	m.graph.BorderFg = termui.ColorYellow
 

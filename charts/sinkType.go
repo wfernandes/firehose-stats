@@ -29,11 +29,11 @@ func (s *SinkTypeChart) Init(ui terminal.UI) {
 	s.graph.Data = s.data
 	s.graph.Width = 80
 	s.graph.Height = 20
-	s.graph.DataLabels = []string{"ContainerMetric", "SysLog", "Dump", "Websocket", "Firehose"}
-	s.graph.TextColor = termui.ColorGreen
-	s.graph.BarColor = termui.ColorRed
-	s.graph.NumColor = termui.ColorYellow
-	s.graph.BarWidth = 10
+	s.graph.DataLabels = []string{"CntnrMetric", "SysLog", "Dump", "Websocket", "Firehose"}
+	s.graph.TextColor = termui.ColorYellow
+	s.graph.BarColor = termui.ColorYellow
+	s.graph.NumColor = termui.ColorMagenta
+	s.graph.BarWidth = 12
 
 
 	s.validOrigins = []string{"DopplerServer"}

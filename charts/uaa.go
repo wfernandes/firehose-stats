@@ -29,11 +29,12 @@ func (u *UAAChart) Init(ui terminal.UI) {
 	u.graph.Data = u.data
 	u.graph.Width = 80
 	u.graph.Height = 20
-	u.graph.DataLabels = []string{"Auth Success", "Auth Failure", "Principal Auth Failure",  "Password Failure"}
-	u.graph.TextColor = termui.ColorGreen
-	u.graph.BarColor = termui.ColorRed
-	u.graph.NumColor = termui.ColorYellow
-	u.graph.BarWidth = 10
+	u.graph.DataLabels = []string{"AuthSuccess", "AuthFailure", "PrnAuthFailure",  "PwdFailure"}
+	u.graph.TextColor = termui.ColorYellow
+	u.graph.BarColor = termui.ColorCyan
+	u.graph.NumColor = termui.ColorBlack
+	u.graph.BarWidth = 17
+//	u.graph.BarGap = 5
 
 
 	u.validOrigins = []string{"uaa"}

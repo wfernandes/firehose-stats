@@ -31,7 +31,7 @@ func (m *MsgLossChart) Init(cfUI terminal.UI) {
 	m.cfUI = cfUI
 	m.graph = termui.NewGauge()
 	m.graph.Width = 50
-	m.graph.Height = 3
+	m.graph.Height = 8
 	m.graph.PercentColor = termui.ColorBlue
 	m.graph.Y = 0
 	m.graph.X = 0
