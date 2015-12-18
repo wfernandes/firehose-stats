@@ -27,13 +27,13 @@ func (s *SinkTypeChart) Init(ui terminal.UI) {
 	s.graph = termui.NewBarChart()
 	s.graph.BorderLabel = "Number of Sinks"
 	s.graph.Data = s.data
-	s.graph.Width = 100
-	s.graph.Height = 10
+	s.graph.Width = 80
+	s.graph.Height = 20
 	s.graph.DataLabels = []string{"ContainerMetric", "SysLog", "Dump", "Websocket", "Firehose"}
 	s.graph.TextColor = termui.ColorGreen
 	s.graph.BarColor = termui.ColorRed
 	s.graph.NumColor = termui.ColorYellow
-	s.graph.BarWidth = 15
+	s.graph.BarWidth = 10
 
 
 	s.validOrigins = []string{"DopplerServer"}
@@ -63,6 +63,22 @@ func (s *SinkTypeChart) ForChart(event *events.Envelope) bool {
 
 func (m* SinkTypeChart) Buffer() termui.Buffer {
 	return m.graph.Buffer()
+}
+
+func (m* SinkTypeChart) GetHeight() int {
+	return m.graph.GetHeight()
+}
+
+func (m* SinkTypeChart) SetWidth(w int) {
+	m.graph.SetWidth(w)
+}
+
+func (m* SinkTypeChart) SetX(x int) {
+	m.graph.SetX(x)
+}
+
+func (m* SinkTypeChart) SetY(y int) {
+	m.graph.SetY(y)
 }
 
 

@@ -42,15 +42,32 @@ func (s *Stats) Start() {
 		sinkTypeChart := &charts.SinkTypeChart{}
 		sinkTypeChart.Init(s.cfUI)
 
+		uaaChart := &charts.UAAChart{}
+		uaaChart.Init(s.cfUI)
+
 		firehoseMF.Sift(
 			s.dataChan,
 			[]charts.Chart{
 				sinkTypeChart,
+				uaaChart,
 			},
 		)
 
+
+		termui.Body.AddRows(
+			termui.NewRow(
+				termui.NewCol(6, 0, sinkTypeChart),
+			),
+			termui.NewRow(
+				termui.NewCol(6, 0, uaaChart),
+			),
+		)
+
+
+
 		for {
-			termui.Render(sinkTypeChart)
+			termui.Body.Align()
+			termui.Render(termui.Body)
 			time.Sleep(1 * time.Second)
 		}
 	}()
