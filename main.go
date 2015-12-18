@@ -3,6 +3,9 @@ import (
 	"github.com/cloudfoundry/cli/cf/terminal"
 	"github.com/cloudfoundry/cli/plugin"
 	"os"
+	"github.com/wfernandes/firehose-stats/firehose"
+"github.com/cloudfoundry/sonde-go/events"
+"github.com/wfernandes/firehose-stats/stats"
 )
 
 type FirehoseStatsCmd struct {
@@ -29,11 +32,11 @@ func (s *FirehoseStatsCmd) GetMetadata() plugin.PluginMetadata {
 		Commands: []plugin.Command{
 			{
 				Name: "firehose-stats",
-				Alias: "firestats",
+				Alias: "fs",
 				HelpText: "Displays real time statistics from the Firehose. Must be logged in as an admin user.",
 				UsageDetails: plugin.Usage{
 					Usage: "cf firehose-stats",
-					Options: map[string]string {
+					Options: map[string]string{
 						"debug": "-d, enable debugging",
 					},
 				},
@@ -42,7 +45,7 @@ func (s *FirehoseStatsCmd) GetMetadata() plugin.PluginMetadata {
 	}
 }
 
-func (s *FirehoseStatsCmd) Run( cliConnection plugin.CliConnection, args []string) {
+func (s *FirehoseStatsCmd) Run(cliConnection plugin.CliConnection, args []string) {
 
 	if args[0] != "firehose-stats" {
 		return
@@ -50,5 +53,21 @@ func (s *FirehoseStatsCmd) Run( cliConnection plugin.CliConnection, args []strin
 
 	s.cfUI = terminal.NewUI(os.Stdin, terminal.NewTeePrinter())
 
-	s.cfUI.Say("This is the firehose stats command")
+	dopplerEndpoint, err := cliConnection.DopplerEndpoint()
+	if err != nil {
+		s.cfUI.Failed(err.Error())
+	}
+
+	authToken, err := cliConnection.AccessToken()
+	if err != nil {
+		s.cfUI.Failed(err.Error())
+	}
+	firehoseChan := make(chan *events.Envelope)
+	client := firehose.NewClient(authToken, dopplerEndpoint, s.cfUI, firehoseChan)
+	client.Start()
+
+	statsUI := stats.New(firehoseChan, s.cfUI)
+	statsUI.Start()
+
+
 }
