@@ -98,7 +98,14 @@ func (s * SinkTypeChart) ProcessEvent(event *events.Envelope) {
 }
 
 func updateAndReturnValue(values map[string]int, event *events.Envelope) int {
-	values[event.GetIp()] = int(event.GetValueMetric().GetValue())
+
+	switch event.GetEventType() {
+	case events.Envelope_CounterEvent:
+		values[event.GetIp()] = int(event.GetCounterEvent().GetTotal())
+	case events.Envelope_ValueMetric:
+		values[event.GetIp()] = int(event.GetValueMetric().GetValue())
+	}
+
 
 	sum := 0
 	for _, v := range values {

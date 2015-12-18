@@ -6,18 +6,21 @@ import (
 	"time"
 	"github.com/wfernandes/firehose-stats/firehose"
 	"github.com/wfernandes/firehose-stats/charts"
+"github.com/cloudfoundry/cli/plugin"
 )
 
 
 type Stats struct {
 	dataChan <-chan *events.Envelope
 	cfUI     terminal.UI
+	cliConn plugin.CliConnection
 }
 
-func New(output chan *events.Envelope, cui terminal.UI) *Stats {
+func New(output chan *events.Envelope, cui terminal.UI, cli plugin.CliConnection) *Stats {
 	return &Stats{
 		dataChan: output,
 		cfUI: cui,
+		cliConn: cli,
 	}
 }
 
@@ -34,36 +37,38 @@ func (s *Stats) Start() {
 
 		firehoseMF := &firehose.ChartFilter{}
 
-		//
-		//		msgLossChart := &charts.MsgLossChart{}
-		//		msgLossChart.Init()
-
-
 		sinkTypeChart := &charts.SinkTypeChart{}
 		sinkTypeChart.Init(s.cfUI)
 
 		uaaChart := &charts.UAAChart{}
 		uaaChart.Init(s.cfUI)
 
+		msgLossChart := &charts.MsgLossChart{}
+		msgLossChart.Init(s.cfUI)
+
+		notesChart := &charts.NotesChart{}
+		notesChart.Init()
+
+
 		firehoseMF.Sift(
 			s.dataChan,
 			[]charts.Chart{
 				sinkTypeChart,
 				uaaChart,
+				msgLossChart,
 			},
 		)
-
 
 		termui.Body.AddRows(
 			termui.NewRow(
 				termui.NewCol(6, 0, sinkTypeChart),
-			),
-			termui.NewRow(
 				termui.NewCol(6, 0, uaaChart),
 			),
+			termui.NewRow(
+				termui.NewCol(6, 0, msgLossChart),
+				termui.NewCol(6, 0, notesChart),
+			),
 		)
-
-
 
 		for {
 			termui.Body.Align()

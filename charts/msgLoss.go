@@ -2,6 +2,7 @@ package charts
 import (
 	"github.com/cloudfoundry/sonde-go/events"
 	"github.com/gizak/termui"
+"github.com/cloudfoundry/cli/cf/terminal"
 )
 
 type Chart interface {
@@ -13,24 +14,34 @@ type Chart interface {
 
 type MsgLossChart struct {
 	graph *termui.Gauge
+	cfUI			terminal.UI
+
 	validOrigins []string
 	validMetricNames []string
+	totalSent int64
+	totalReceived int64
+
+	sentByIP map[string]int64
+	receivedByIP map[string]int64
 }
 
-func (m *MsgLossChart) Init() {
+func (m *MsgLossChart) Init(cfUI terminal.UI) {
+	m.sentByIP = make(map[string]int64)
+	m.receivedByIP = make(map[string]int64)
+	m.cfUI = cfUI
 	m.graph = termui.NewGauge()
 	m.graph.Width = 50
 	m.graph.Height = 3
 	m.graph.PercentColor = termui.ColorBlue
 	m.graph.Y = 0
 	m.graph.X = 0
-	m.graph.BorderLabel = "Slim Gauge"
+	m.graph.BorderLabel = "(%)Msg Loss Between Metron and Doppler"
 	m.graph.BarColor = termui.ColorYellow
 	m.graph.BorderFg = termui.ColorWhite
 
 
 	m.validOrigins = []string{"MetronAgent", "DopplerServer"}
-	m.validMetricNames = []string{"tls.sentMessageCount", "tlsListener.receivedMessageCount"}
+	m.validMetricNames = []string{"DopplerForwarder.sentMessages", "tlsListener.receivedMessageCount", "dropsondeListener.receivedMessageCount"}
 
 }
 
@@ -51,11 +62,33 @@ func (m* MsgLossChart) Buffer() termui.Buffer {
 	return m.graph.Buffer()
 }
 
-
-func (m * MsgLossChart) ProcessEvent() {
-	// do nothing
+func (m* MsgLossChart) GetHeight() int {
+	return m.graph.GetHeight()
 }
 
+func (m* MsgLossChart) SetWidth(w int) {
+	m.graph.SetWidth(w)
+}
+
+func (m* MsgLossChart) SetX(x int) {
+	m.graph.SetX(x)
+}
+
+func (m* MsgLossChart) SetY(y int) {
+	m.graph.SetY(y)
+}
+
+func (m * MsgLossChart) ProcessEvent(evt *events.Envelope) {
+	switch evt.GetCounterEvent().GetName() {
+	case "DopplerForwarder.sentMessages":
+		m.totalSent = update(m.sentByIP, evt)
+	case "tlsListener.receivedMessageCount", "dropsondeListener.receivedMessageCount":
+		m.totalReceived = update(m.receivedByIP, evt)
+	}
+	percent := 100 * ((m.totalSent - m.totalReceived) / m.totalSent)
+
+	m.graph.Percent = int(percent)
+}
 
 func contains(name string, list []string) bool {
 
@@ -65,4 +98,18 @@ func contains(name string, list []string) bool {
 		}
 	}
 	return false
+}
+
+
+func update(values map[string]int64, event *events.Envelope) int64 {
+
+	values[event.GetIp()] = int64(event.GetCounterEvent().GetTotal())
+
+
+	var sum int64
+	for _, v := range values {
+		sum = sum + v
+	}
+
+	return sum
 }

@@ -66,7 +66,7 @@ func (s *FirehoseStatsCmd) Run(cliConnection plugin.CliConnection, args []string
 	client := firehose.NewClient(authToken, dopplerEndpoint, s.cfUI, firehoseChan)
 	client.Start()
 
-	statsUI := stats.New(firehoseChan, s.cfUI)
+	statsUI := stats.New(firehoseChan, s.cfUI, cliConnection)
 	statsUI.Start()
 
 
