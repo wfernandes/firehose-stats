@@ -5,7 +5,12 @@ import (
 	"github.com/cloudfoundry/cli/cf/terminal"
 	"github.com/cloudfoundry/noaa"
 	"github.com/cloudfoundry/sonde-go/events"
+	"github.com/wfernandes/firehose-stats/charts"
 )
+
+type Sifter interface {
+	Sift(in <-chan *events.Envelope, charts []charts.Chart)
+}
 
 type Client struct {
 	dopplerEndpoint string
@@ -42,4 +47,17 @@ func (c *Client) Start() {
 	c.ui.Say("Starting the nozzle")
 	c.ui.Say("Hit Ctrl+c to exit")
 
+}
+
+
+func (c *Client) Sift(charts []charts.Chart) {
+	go func() {
+		for inEvent := range c.outputChan {
+			for _, chart := range charts {
+				if chart.ForChart(inEvent) {
+					chart.ProcessEvent(inEvent)
+				}
+			}
+		}
+	}()
 }

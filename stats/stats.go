@@ -1,24 +1,23 @@
 package stats
 import (
-	"github.com/cloudfoundry/sonde-go/events"
 	"github.com/gizak/termui"
 	"github.com/cloudfoundry/cli/cf/terminal"
 	"time"
 	"github.com/wfernandes/firehose-stats/firehose"
 	"github.com/wfernandes/firehose-stats/charts"
-"github.com/cloudfoundry/cli/plugin"
+	"github.com/cloudfoundry/cli/plugin"
 )
 
 
 type Stats struct {
-	dataChan <-chan *events.Envelope
+	client  *firehose.Client
 	cfUI     terminal.UI
 	cliConn plugin.CliConnection
 }
 
-func New(output chan *events.Envelope, cui terminal.UI, cli plugin.CliConnection) *Stats {
+func New(firehoseClient *firehose.Client, cui terminal.UI, cli plugin.CliConnection) *Stats {
 	return &Stats{
-		dataChan: output,
+		client: firehoseClient,
 		cfUI: cui,
 		cliConn: cli,
 	}
@@ -35,8 +34,6 @@ func (s *Stats) Start() {
 
 	go func() {
 
-		firehoseMF := &firehose.ChartFilter{}
-
 		sinkTypeChart := &charts.SinkTypeChart{}
 		sinkTypeChart.Init(s.cfUI)
 
@@ -50,8 +47,7 @@ func (s *Stats) Start() {
 		notesChart.Init()
 
 
-		firehoseMF.Sift(
-			s.dataChan,
+		s.client.Sift(
 			[]charts.Chart{
 				sinkTypeChart,
 				uaaChart,

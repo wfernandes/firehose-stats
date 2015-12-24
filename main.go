@@ -4,8 +4,8 @@ import (
 	"github.com/cloudfoundry/cli/plugin"
 	"os"
 	"github.com/wfernandes/firehose-stats/firehose"
-"github.com/cloudfoundry/sonde-go/events"
-"github.com/wfernandes/firehose-stats/stats"
+	"github.com/cloudfoundry/sonde-go/events"
+	"github.com/wfernandes/firehose-stats/stats"
 )
 
 type FirehoseStatsCmd struct {
@@ -66,8 +66,7 @@ func (s *FirehoseStatsCmd) Run(cliConnection plugin.CliConnection, args []string
 	client := firehose.NewClient(authToken, dopplerEndpoint, s.cfUI, firehoseChan)
 	client.Start()
 
-	statsUI := stats.New(firehoseChan, s.cfUI, cliConnection)
+	statsUI := stats.New(client, s.cfUI, cliConnection)
 	statsUI.Start()
-
 
 }
