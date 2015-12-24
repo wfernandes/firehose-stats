@@ -19,19 +19,20 @@ type Client struct {
 	outputChan		chan *events.Envelope
 }
 
-func NewClient(authToken, doppplerEndpoint string, ui terminal.UI, outChan chan *events.Envelope) *Client {
+func NewClient(authToken, doppplerEndpoint string, ui terminal.UI) *Client {
+	firehoseChan := make(chan *events.Envelope)
 	return &Client{
 		dopplerEndpoint: doppplerEndpoint,
 		authToken:       authToken,
 		ui:              ui,
-		outputChan: outChan,
+		outputChan: firehoseChan,
 	}
 
 }
 
 func (c *Client) Start() {
-	dopplerConnection := noaa.NewConsumer(c.dopplerEndpoint, &tls.Config{InsecureSkipVerify: true}, nil)
 
+	dopplerConnection := noaa.NewConsumer(c.dopplerEndpoint, &tls.Config{InsecureSkipVerify: true}, nil)
 	subscriptionID := "firehose-stats"
 	go func() {
 		err := dopplerConnection.FirehoseWithoutReconnect(subscriptionID, c.authToken, c.outputChan)

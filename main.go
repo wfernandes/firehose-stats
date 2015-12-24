@@ -37,7 +37,6 @@ func (s *FirehoseStatsCmd) GetMetadata() plugin.PluginMetadata {
 				UsageDetails: plugin.Usage{
 					Usage: "cf firehose-stats",
 					Options: map[string]string{
-						"debug": "-d, enable debugging",
 					},
 				},
 			},
@@ -62,8 +61,7 @@ func (s *FirehoseStatsCmd) Run(cliConnection plugin.CliConnection, args []string
 	if err != nil {
 		s.cfUI.Failed(err.Error())
 	}
-	firehoseChan := make(chan *events.Envelope)
-	client := firehose.NewClient(authToken, dopplerEndpoint, s.cfUI, firehoseChan)
+	client := firehose.NewClient(authToken, dopplerEndpoint, s.cfUI, )
 	client.Start()
 
 	statsUI := stats.New(client, s.cfUI, cliConnection)
