@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"encoding/binary"
+	"strings"
+
 	"github.com/cloudfoundry/sonde-go/events"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gorilla/websocket"
 	"github.com/nu7hatch/gouuid"
-	"strings"
 )
 
 type FakeFirehose struct {

@@ -2,6 +2,7 @@ package firehose
 
 import (
 	"crypto/tls"
+
 	"github.com/cloudfoundry/cli/cf/terminal"
 	"github.com/cloudfoundry/noaa"
 	"github.com/cloudfoundry/sonde-go/events"
@@ -16,7 +17,7 @@ type Client struct {
 	dopplerEndpoint string
 	authToken       string
 	ui              terminal.UI
-	outputChan		chan *events.Envelope
+	outputChan      chan *events.Envelope
 }
 
 func NewClient(authToken, doppplerEndpoint string, ui terminal.UI) *Client {
@@ -25,7 +26,7 @@ func NewClient(authToken, doppplerEndpoint string, ui terminal.UI) *Client {
 		dopplerEndpoint: doppplerEndpoint,
 		authToken:       authToken,
 		ui:              ui,
-		outputChan: firehoseChan,
+		outputChan:      firehoseChan,
 	}
 
 }
@@ -49,7 +50,6 @@ func (c *Client) Start() {
 	c.ui.Say("Hit Ctrl+c to exit")
 
 }
-
 
 func (c *Client) Sift(charts []charts.Chart) {
 	go func() {

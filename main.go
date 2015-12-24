@@ -1,10 +1,11 @@
 package main
+
 import (
+	"os"
+
 	"github.com/cloudfoundry/cli/cf/terminal"
 	"github.com/cloudfoundry/cli/plugin"
-	"os"
 	"github.com/wfernandes/firehose-stats/firehose"
-	"github.com/cloudfoundry/sonde-go/events"
 	"github.com/wfernandes/firehose-stats/stats"
 )
 
@@ -31,13 +32,12 @@ func (s *FirehoseStatsCmd) GetMetadata() plugin.PluginMetadata {
 		},
 		Commands: []plugin.Command{
 			{
-				Name: "firehose-stats",
-				Alias: "fs",
+				Name:     "firehose-stats",
+				Alias:    "fs",
 				HelpText: "Displays real time statistics from the Firehose. Must be logged in as an admin user.",
 				UsageDetails: plugin.Usage{
-					Usage: "cf firehose-stats",
-					Options: map[string]string{
-					},
+					Usage:   "cf firehose-stats",
+					Options: map[string]string{},
 				},
 			},
 		},
@@ -61,7 +61,7 @@ func (s *FirehoseStatsCmd) Run(cliConnection plugin.CliConnection, args []string
 	if err != nil {
 		s.cfUI.Failed(err.Error())
 	}
-	client := firehose.NewClient(authToken, dopplerEndpoint, s.cfUI, )
+	client := firehose.NewClient(authToken, dopplerEndpoint, s.cfUI)
 	client.Start()
 
 	statsUI := stats.New(client, s.cfUI, cliConnection)

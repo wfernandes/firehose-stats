@@ -1,8 +1,9 @@
 package charts
+
 import (
+	"github.com/cloudfoundry/cli/cf/terminal"
 	"github.com/cloudfoundry/sonde-go/events"
 	"github.com/gizak/termui"
-"github.com/cloudfoundry/cli/cf/terminal"
 )
 
 type Chart interface {
@@ -11,17 +12,16 @@ type Chart interface {
 	Buffer() termui.Buffer
 }
 
-
 type MsgLossChart struct {
 	graph *termui.Gauge
-	cfUI			terminal.UI
+	cfUI  terminal.UI
 
-	validOrigins []string
+	validOrigins     []string
 	validMetricNames []string
-	totalSent int64
-	totalReceived int64
+	totalSent        int64
+	totalReceived    int64
 
-	sentByIP map[string]int64
+	sentByIP     map[string]int64
 	receivedByIP map[string]int64
 }
 
@@ -38,7 +38,6 @@ func (m *MsgLossChart) Init(cfUI terminal.UI) {
 	m.graph.BorderLabel = "(%)Msg Loss Between Metron and Doppler"
 	m.graph.BarColor = termui.ColorYellow
 	m.graph.BorderFg = termui.ColorWhite
-
 
 	m.validOrigins = []string{"MetronAgent", "DopplerServer"}
 	m.validMetricNames = []string{"DopplerForwarder.sentMessages", "tlsListener.receivedMessageCount", "dropsondeListener.receivedMessageCount"}
@@ -58,27 +57,27 @@ func (m *MsgLossChart) ForChart(event *events.Envelope) bool {
 	return true
 }
 
-func (m* MsgLossChart) Buffer() termui.Buffer {
+func (m *MsgLossChart) Buffer() termui.Buffer {
 	return m.graph.Buffer()
 }
 
-func (m* MsgLossChart) GetHeight() int {
+func (m *MsgLossChart) GetHeight() int {
 	return m.graph.GetHeight()
 }
 
-func (m* MsgLossChart) SetWidth(w int) {
+func (m *MsgLossChart) SetWidth(w int) {
 	m.graph.SetWidth(w)
 }
 
-func (m* MsgLossChart) SetX(x int) {
+func (m *MsgLossChart) SetX(x int) {
 	m.graph.SetX(x)
 }
 
-func (m* MsgLossChart) SetY(y int) {
+func (m *MsgLossChart) SetY(y int) {
 	m.graph.SetY(y)
 }
 
-func (m * MsgLossChart) ProcessEvent(evt *events.Envelope) {
+func (m *MsgLossChart) ProcessEvent(evt *events.Envelope) {
 	switch evt.GetCounterEvent().GetName() {
 	case "DopplerForwarder.sentMessages":
 		m.totalSent = update(m.sentByIP, evt)
@@ -100,11 +99,9 @@ func contains(name string, list []string) bool {
 	return false
 }
 
-
 func update(values map[string]int64, event *events.Envelope) int64 {
 
 	values[event.GetIp()] = int64(event.GetCounterEvent().GetTotal())
-
 
 	var sum int64
 	for _, v := range values {

@@ -1,24 +1,25 @@
 package stats
-import (
-	"github.com/gizak/termui"
-	"github.com/cloudfoundry/cli/cf/terminal"
-	"time"
-	"github.com/wfernandes/firehose-stats/firehose"
-	"github.com/wfernandes/firehose-stats/charts"
-	"github.com/cloudfoundry/cli/plugin"
-)
 
+import (
+	"time"
+
+	"github.com/cloudfoundry/cli/cf/terminal"
+	"github.com/cloudfoundry/cli/plugin"
+	"github.com/gizak/termui"
+	"github.com/wfernandes/firehose-stats/charts"
+	"github.com/wfernandes/firehose-stats/firehose"
+)
 
 type Stats struct {
 	client  *firehose.Client
-	cfUI     terminal.UI
+	cfUI    terminal.UI
 	cliConn plugin.CliConnection
 }
 
 func New(firehoseClient *firehose.Client, cui terminal.UI, cli plugin.CliConnection) *Stats {
 	return &Stats{
-		client: firehoseClient,
-		cfUI: cui,
+		client:  firehoseClient,
+		cfUI:    cui,
 		cliConn: cli,
 	}
 }
@@ -45,7 +46,6 @@ func (s *Stats) Start() {
 
 		notesChart := &charts.NotesChart{}
 		notesChart.Init()
-
 
 		s.client.Sift(
 			[]charts.Chart{
@@ -79,6 +79,3 @@ func (s *Stats) Start() {
 	termui.Loop()
 
 }
-
-
-

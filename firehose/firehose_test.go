@@ -6,11 +6,11 @@ import (
 
 	"github.com/cloudfoundry/cli/cf/terminal"
 	"github.com/cloudfoundry/cli/cf/terminal/fakes"
-	"github.com/wfernandes/firehose-stats/firehose"
-	"github.com/wfernandes/firehose-stats/testhelpers"
 	"github.com/cloudfoundry/sonde-go/events"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/wfernandes/firehose-stats/firehose"
+	"github.com/wfernandes/firehose-stats/testhelpers"
 )
 
 type fakeStdin struct {
