@@ -7,9 +7,9 @@ import (
 )
 
 type Chart interface {
-	ProcessEvent(e *events.Envelope)
+	termui.GridBufferer
 	ForChart(e *events.Envelope) bool
-	Buffer() termui.Buffer
+	ProcessEvent(e *events.Envelope)
 }
 
 type MsgLossChart struct {

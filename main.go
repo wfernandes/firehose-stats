@@ -5,8 +5,6 @@ import (
 
 	"github.com/cloudfoundry/cli/cf/terminal"
 	"github.com/cloudfoundry/cli/plugin"
-	"github.com/wfernandes/firehose-stats/firehose"
-	"github.com/wfernandes/firehose-stats/stats"
 )
 
 type FirehoseStatsCmd struct {
@@ -51,20 +49,22 @@ func (s *FirehoseStatsCmd) Run(cliConnection plugin.CliConnection, args []string
 	}
 
 	s.cfUI = terminal.NewUI(os.Stdin, terminal.NewTeePrinter())
+	//
+	//	dopplerEndpoint, err := cliConnection.DopplerEndpoint()
+	//	if err != nil {
+	//		s.cfUI.Failed(err.Error())
+	//	}
+	//
+	//	authToken, err := cliConnection.AccessToken()
+	//	if err != nil {
+	//		s.cfUI.Failed(err.Error())
+	//	}
+	//
 
-	dopplerEndpoint, err := cliConnection.DopplerEndpoint()
-	if err != nil {
-		s.cfUI.Failed(err.Error())
-	}
-
-	authToken, err := cliConnection.AccessToken()
-	if err != nil {
-		s.cfUI.Failed(err.Error())
-	}
-	client := firehose.NewClient(authToken, dopplerEndpoint, s.cfUI)
-	client.Start()
-
-	statsUI := stats.New(client, s.cfUI, cliConnection)
-	statsUI.Start()
+	//	firehose := firehose.NewClient(authToken, dopplerEndpoint, s.cfUI)
+	//	firehose.Start()
+	//
+	//	statsUI := stats.New(firehose, s.cfUI, cliConnection)
+	//	statsUI.Start()
 
 }

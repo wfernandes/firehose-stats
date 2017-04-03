@@ -1,29 +1,27 @@
 package main_test
 
 import (
-
+	"github.com/cloudfoundry/cli/plugin/fakes"
+	. "github.com/cloudfoundry/firehose-stats"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/cloudfoundry/firehose-stats"
-	"github.com/cloudfoundry/cli/plugin/fakes"
-//	"github.com/cloudfoundry/firehose-plugin/testhelpers"
+	//	"github.com/cloudfoundry/firehose-plugin/testhelpers"
 	io_helpers "github.com/cloudfoundry/cli/testhelpers/io"
 
 	"strings"
 )
 
 var _ = Describe("FirehoseStatsPlugin", func() {
-	Describe(".Run", func(){
+	Describe(".Run", func() {
 		var fakeCliConnection *fakes.FakeCliConnection
 		var firehoseStatsCmd *FirehoseStatsCmd
-//		var fakeFirehose *testhelpers.FakeFirehose
-
+		//		var fakeFirehose *testhelpers.FakeFirehose
 
 		PIt("displays debug info when debug flag is passed", func() {
 
 			outputChan := make(chan []string)
 			go func() {
-				output := io_helpers.CaptureOutput(func(){
+				output := io_helpers.CaptureOutput(func() {
 					firehoseStatsCmd.Run(fakeCliConnection, []string{"firehose-stats", "--debug"})
 				})
 				outputChan <- output

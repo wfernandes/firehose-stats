@@ -35,11 +35,13 @@ var _ = Describe("Firehose", func() {
 	var stdin *fakeStdin
 	var stdout string
 	var lineCounter int
+	var consumer *mockConsumer
 
 	BeforeEach(func() {
 		lineCounter = 0
 		printer = new(fakes.FakePrinter)
 		stdout = ""
+		consumer = newMockConsumer()
 		printer.PrintfStub = func(format string, a ...interface{}) (n int, err error) {
 			stdout += fmt.Sprintf(format, a...)
 			lineCounter++
@@ -50,13 +52,12 @@ var _ = Describe("Firehose", func() {
 	})
 
 	Context("Start", func() {
-		FContext("when the connection to doppler cannot be established", func() {
+		Context("when the connection to doppler cannot be established", func() {
 			It("shows a meaningful error", func() {
-				client := firehose.NewClient("invalidToken", "badEndpoint", ui)
+				client := firehose.NewClient("invalidToken", "badEndpoint", consumer, ui)
 				client.Start()
-				Eventually(stdout).Should(ContainSubstring("Error dialing traffic controller server"))
+				Expect(stdout).To(ContainSubstring("Error dialing traffic controller server"))
 			})
-
 		})
 
 		Context("when the connection to doppler works", func() {
@@ -64,28 +65,29 @@ var _ = Describe("Firehose", func() {
 			BeforeEach(func() {
 				fakeFirehose = testhelpers.NewFakeFirehose("ACCESS_TOKEN")
 				fakeFirehose.SendEvent(events.Envelope_LogMessage, "This is a very special test message")
-				fakeFirehose.SendEvent(events.Envelope_ValueMetric, "valuemetric")
-				fakeFirehose.SendEvent(events.Envelope_CounterEvent, "counterevent")
-				fakeFirehose.SendEvent(events.Envelope_ContainerMetric, "containermetric")
-				fakeFirehose.SendEvent(events.Envelope_Error, "this is an error")
-				fakeFirehose.SendEvent(events.Envelope_HttpStart, "start request")
-				fakeFirehose.SendEvent(events.Envelope_HttpStop, "stop request")
-				fakeFirehose.SendEvent(events.Envelope_HttpStartStop, "startstop request")
+				fakeFirehose.SendEvent(events.Envelope_ValueMetric, "This is a valuemetric")
+				fakeFirehose.SendEvent(events.Envelope_CounterEvent, "This is a counterevent")
+				fakeFirehose.SendEvent(events.Envelope_ContainerMetric, "This is a containermetric")
 				fakeFirehose.Start()
 			})
-			It("prints out debug information if demanded", func() {
-				client := firehose.NewClient("ACCESS_TOKEN", fakeFirehose.URL(), ui)
-				client.Start()
-				Expect(stdout).To(ContainSubstring("WEBSOCKET REQUEST"))
-				Expect(stdout).To(ContainSubstring("WEBSOCKET RESPONSE"))
-			})
 
-			It("prints out log messages to the terminal", func() {
-				client := firehose.NewClient("ACCESS_TOKEN", fakeFirehose.URL(), ui)
+			It("processes events", func() {
+				client := firehose.NewClient("ACCESS_TOKEN", fakeFirehose.URL(), consumer, ui)
 				client.Start()
-				Expect(stdout).To(ContainSubstring("This is a very special test message"))
-			})
+				Eventually(consumer.ConsumeCalled).Should(Receive(BeTrue()))
+				var receivedEnvelope *events.Envelope
+				Eventually(consumer.ConsumeInput.e).Should(Receive(&receivedEnvelope))
+				Expect(receivedEnvelope.String()).To(ContainSubstring("This is a very special test message"))
 
+				Eventually(consumer.ConsumeInput.e).Should(Receive(&receivedEnvelope))
+				Expect(receivedEnvelope.String()).To(ContainSubstring("This is a valuemetric"))
+
+				Eventually(consumer.ConsumeInput.e).Should(Receive(&receivedEnvelope))
+				Expect(receivedEnvelope.String()).To(ContainSubstring("This is a counterevent"))
+
+				Eventually(consumer.ConsumeInput.e).Should(Receive(&receivedEnvelope))
+				Expect(receivedEnvelope.String()).To(ContainSubstring("This is a containermetric"))
+			})
 		})
 	})
 })
