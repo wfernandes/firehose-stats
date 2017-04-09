@@ -2,4 +2,4 @@
 
 set -e
 
-(cf uninstall-plugin "FirehoseStats" || true) && go build -o firehose-stats main.go && cf install-plugin firehose-stats
+(cf uninstall-plugin "FirehoseStats" || true) && go build && cf install-plugin firehose-stats
