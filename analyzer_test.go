@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -27,7 +28,7 @@ func setup(t *testing.T) {
 	)
 }
 
-func TestAnalyzer_CountsTotal(t *testing.T) {
+func TestCountsTotal(t *testing.T) {
 	setup(t)
 
 	go analyzer.Start()
@@ -35,13 +36,13 @@ func TestAnalyzer_CountsTotal(t *testing.T) {
 		envelopes <- buildEnvelope(events.Envelope_LogMessage)
 	}
 
-	f := func() int {
-		return printer.Total
+	f := func() int64 {
+		return atomic.LoadInt64(&printer.Total)
 	}
-	Eventually(f).Should(Equal(5))
+	Eventually(f).Should(BeEquivalentTo(5))
 }
 
-func TestAnalyzer_CountsLogMessages(t *testing.T) {
+func TestCountsLogMessages(t *testing.T) {
 	setup(t)
 
 	go analyzer.Start()
@@ -49,13 +50,13 @@ func TestAnalyzer_CountsLogMessages(t *testing.T) {
 		envelopes <- buildEnvelope(events.Envelope_LogMessage)
 	}
 
-	f := func() int {
-		return printer.LogMessages
+	f := func() int64 {
+		return atomic.LoadInt64(&printer.LogMessages)
 	}
-	Eventually(f).Should(Equal(5))
+	Eventually(f).Should(BeEquivalentTo(5))
 }
 
-func TestAnalyzer_CountsCounterEvents(t *testing.T) {
+func TestCountsCounterEvents(t *testing.T) {
 	setup(t)
 
 	go analyzer.Start()
@@ -64,17 +65,17 @@ func TestAnalyzer_CountsCounterEvents(t *testing.T) {
 		envelopes <- buildEnvelope(events.Envelope_LogMessage)
 	}
 
-	getCounterEvents := func() int {
-		return printer.CounterEvents
+	getCounterEvents := func() int64 {
+		return atomic.LoadInt64(&printer.CounterEvents)
 	}
-	getTotal := func() int {
-		return printer.Total
+	getTotal := func() int64 {
+		return atomic.LoadInt64(&printer.Total)
 	}
-	Eventually(getCounterEvents).Should(Equal(3))
-	Eventually(getTotal).Should(Equal(6))
+	Eventually(getCounterEvents).Should(BeEquivalentTo(3))
+	Eventually(getTotal).Should(BeEquivalentTo(6))
 }
 
-func TestAnalyzer_CountsContainerMetrics(t *testing.T) {
+func TestCountsContainerMetrics(t *testing.T) {
 	setup(t)
 
 	go analyzer.Start()
@@ -83,17 +84,17 @@ func TestAnalyzer_CountsContainerMetrics(t *testing.T) {
 		envelopes <- buildEnvelope(events.Envelope_LogMessage)
 	}
 
-	getContainerMetrics := func() int {
-		return printer.ContainerMetrics
+	getContainerMetrics := func() int64 {
+		return atomic.LoadInt64(&printer.ContainerMetrics)
 	}
-	getTotal := func() int {
-		return printer.Total
+	getTotal := func() int64 {
+		return atomic.LoadInt64(&printer.Total)
 	}
-	Eventually(getContainerMetrics).Should(Equal(3))
-	Eventually(getTotal).Should(Equal(6))
+	Eventually(getContainerMetrics).Should(BeEquivalentTo(3))
+	Eventually(getTotal).Should(BeEquivalentTo(6))
 }
 
-func TestAnalyzer_CountsValueMetrics(t *testing.T) {
+func TestCountsValueMetrics(t *testing.T) {
 	setup(t)
 
 	go analyzer.Start()
@@ -102,17 +103,17 @@ func TestAnalyzer_CountsValueMetrics(t *testing.T) {
 		envelopes <- buildEnvelope(events.Envelope_LogMessage)
 	}
 
-	getValueMetrics := func() int {
-		return printer.ValueMetrics
+	getValueMetrics := func() int64 {
+		return atomic.LoadInt64(&printer.ValueMetrics)
 	}
-	getTotal := func() int {
-		return printer.Total
+	getTotal := func() int64 {
+		return atomic.LoadInt64(&printer.Total)
 	}
-	Eventually(getValueMetrics).Should(Equal(4))
-	Eventually(getTotal).Should(Equal(8))
+	Eventually(getValueMetrics).Should(BeEquivalentTo(4))
+	Eventually(getTotal).Should(BeEquivalentTo(8))
 }
 
-func TestAnalyzer_AvgEnvelopeSize(t *testing.T) {
+func TestAvgEnvelopeSize(t *testing.T) {
 	setup(t)
 
 	go analyzer.Start()
@@ -138,15 +139,15 @@ func TestAnalyzer_AvgEnvelopeSize(t *testing.T) {
 		envelopes <- e1
 	}
 	envelopes <- e2
-	getAvgEnvelopeSize := func() int {
-		return printer.AvgEnvelopeSize
+	getAvgEnvelopeSize := func() int64 {
+		return atomic.LoadInt64(&printer.AvgEnvelopeSize)
 	}
-	getTotal := func() int {
-		return printer.Total
+	getTotal := func() int64 {
+		return atomic.LoadInt64(&printer.Total)
 	}
 	expectedAvg := ((e1.Size() * 5) + e2.Size()) / 6
-	Eventually(getTotal).Should(Equal(6))
-	Eventually(getAvgEnvelopeSize).Should(Equal(expectedAvg))
+	Eventually(getTotal).Should(BeEquivalentTo(6))
+	Eventually(getAvgEnvelopeSize).Should(BeEquivalentTo(expectedAvg))
 }
 
 func buildEnvelope(envtype events.Envelope_EventType) *events.Envelope {
@@ -157,12 +158,12 @@ func buildEnvelope(envtype events.Envelope_EventType) *events.Envelope {
 }
 
 type mockPrinter struct {
-	Total            int
-	LogMessages      int
-	CounterEvents    int
-	ContainerMetrics int
-	ValueMetrics     int
-	AvgEnvelopeSize  int
+	Total            int64
+	LogMessages      int64
+	CounterEvents    int64
+	ContainerMetrics int64
+	ValueMetrics     int64
+	AvgEnvelopeSize  int64
 }
 
 func newMockPrinter() *mockPrinter {
@@ -170,10 +171,10 @@ func newMockPrinter() *mockPrinter {
 }
 
 func (p *mockPrinter) Print(s Stats) {
-	p.Total = int(s["TotalMessages"])
-	p.LogMessages = int(s["LogMessages"])
-	p.CounterEvents = int(s["CounterEvents"])
-	p.ContainerMetrics = int(s["ContainerMetrics"])
-	p.ValueMetrics = int(s["ValueMetrics"])
-	p.AvgEnvelopeSize = int(s["AvgEnvelopeSize"])
+	atomic.StoreInt64(&p.Total, s["TotalMessages"])
+	atomic.StoreInt64(&p.LogMessages, s["LogMessages"])
+	atomic.StoreInt64(&p.CounterEvents, s["CounterEvents"])
+	atomic.StoreInt64(&p.ContainerMetrics, s["ContainerMetrics"])
+	atomic.StoreInt64(&p.ValueMetrics, s["ValueMetrics"])
+	atomic.StoreInt64(&p.AvgEnvelopeSize, s["AvgEnvelopeSize"])
 }

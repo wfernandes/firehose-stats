@@ -17,5 +17,5 @@ go fmt ./...
 echo "Go vetting..."
 go vet ./...
 
-echo "Recursive ginkgo... ${*:+(with parameter(s) }$*${*:+)}"
-ginkgo -r --race --randomizeAllSpecs --failOnPending -cover $*
+echo "Go Race Testing... ${*:+(with parameter(s) }$*${*:+)}"
+go test ./... --race $*
