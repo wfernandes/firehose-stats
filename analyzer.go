@@ -22,29 +22,37 @@ type Analyzer struct {
 	stats         Stats
 }
 
-func NewAnalyzer(msg <-chan *events.Envelope, p Printer) *Analyzer {
-	return &Analyzer{
+func NewAnalyzer(msg <-chan *events.Envelope, p Printer, opts ...AnalyzerOpts) *Analyzer {
+	a := &Analyzer{
 		messages:      msg,
 		printer:       p,
 		printInterval: 5 * time.Second,
 		stats:         Stats{},
 	}
+
+	for _, o := range opts {
+		o(a)
+	}
+
+	return a
 }
 
 func (a *Analyzer) Start() {
-
 	ticker := time.NewTicker(a.printInterval)
 	defer ticker.Stop()
 	go func() {
 		for range ticker.C {
-			data := GlobalStats.Load().(Stats)
+			data, ok := GlobalStats.Load().(Stats)
+			if !ok {
+				continue
+			}
 			a.printer.Print(data)
 		}
 	}()
 
 	for e := range a.messages {
 		a.stats["TotalMessages"]++
-		a.stats["AvgEnvelopeSize"] = a.stats["AvgEnvelopeSize"] + int64(e.Size())/a.stats["TotalMessages"]
+		a.stats["TotalEnvelopeSize"] = a.stats["TotalEnvelopeSize"] + int64(e.Size())
 		switch e.GetEventType() {
 		case events.Envelope_CounterEvent:
 			a.stats["CounterEvents"]++
@@ -55,6 +63,15 @@ func (a *Analyzer) Start() {
 		case events.Envelope_ValueMetric:
 			a.stats["ValueMetrics"]++
 		}
+		a.stats["AvgEnvelopeSize"] = a.stats["TotalEnvelopeSize"] / a.stats["TotalMessages"]
 		GlobalStats.Store(a.stats)
+	}
+}
+
+type AnalyzerOpts func(*Analyzer)
+
+func WithPrintInterval(t time.Duration) AnalyzerOpts {
+	return func(a *Analyzer) {
+		a.printInterval = t
 	}
 }

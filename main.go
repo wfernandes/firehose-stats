@@ -79,7 +79,7 @@ func (s *FirehoseStatsCmd) Run(cliConnection plugin.CliConnection, args []string
 		}
 	}()
 
-	s.ui.Say("Starting the nozzle")
+	s.ui.Say(fmt.Sprintf("Starting the nozzle at %s", time.Now()))
 	s.ui.Say("Hit Ctrl+c to exit")
 
 	p := &ResultsPrinter{}
