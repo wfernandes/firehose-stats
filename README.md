@@ -1,9 +1,9 @@
 # firehose-stats
 
-This is a plugin for the Cloud Foundry CLI to provide relatively real time metrics and statistics from the firehose.
+This is a plugin for the Cloud Foundry CLI to provide statistics from the firehose.
 
-The purpose of this plugin is to provide a quick and easy way to visually understand relevant statistics about the
-Cloud Foundry deployment. This negates the need for having a system like Elasticsearch setup to consume all the metrics.
+The purpose of this plugin is to provide insights about the messages flowing
+through the firehose.
 
 ## Usage
 
