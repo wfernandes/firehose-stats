@@ -18,7 +18,7 @@ type Analyzer struct {
 	printer       Printer
 	printInterval time.Duration
 	stats         Stats
-	mu            sync.Mutex
+	mu            sync.RWMutex
 }
 
 func NewAnalyzer(msg <-chan *events.Envelope, p Printer, opts ...AnalyzerOpts) *Analyzer {
@@ -41,12 +41,12 @@ func (a *Analyzer) Start() {
 	defer ticker.Stop()
 	go func() {
 		for range ticker.C {
-			a.mu.Lock()
+			a.mu.RLock()
 			data := Stats{}
 			for k, v := range a.stats {
 				data[k] = v
 			}
-			a.mu.Unlock()
+			a.mu.RUnlock()
 			a.printer.Print(data)
 		}
 	}()
