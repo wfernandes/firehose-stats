@@ -1,7 +1,7 @@
 package main
 
 import (
-	"sync/atomic"
+	"sync"
 	"time"
 
 	"github.com/cloudfoundry/sonde-go/events"
@@ -13,13 +13,12 @@ type Printer interface {
 
 type Stats map[string]int64
 
-var GlobalStats atomic.Value
-
 type Analyzer struct {
 	messages      <-chan *events.Envelope
 	printer       Printer
 	printInterval time.Duration
 	stats         Stats
+	mu            sync.Mutex
 }
 
 func NewAnalyzer(msg <-chan *events.Envelope, p Printer, opts ...AnalyzerOpts) *Analyzer {
@@ -42,30 +41,37 @@ func (a *Analyzer) Start() {
 	defer ticker.Stop()
 	go func() {
 		for range ticker.C {
-			data, ok := GlobalStats.Load().(Stats)
-			if !ok {
-				continue
+			a.mu.Lock()
+			data := Stats{}
+			for k, v := range a.stats {
+				data[k] = v
 			}
+			a.mu.Unlock()
 			a.printer.Print(data)
 		}
 	}()
 
 	for e := range a.messages {
-		a.stats["TotalMessages"]++
-		a.stats["TotalEnvelopeSize"] = a.stats["TotalEnvelopeSize"] + int64(e.Size())
+		a.add("TotalMessages", 1)
+		a.add("TotalEnvelopeSize", int64(e.Size()))
 		switch e.GetEventType() {
 		case events.Envelope_CounterEvent:
-			a.stats["CounterEvents"]++
+			a.add("CounterEvents", 1)
 		case events.Envelope_LogMessage:
-			a.stats["LogMessages"]++
+			a.add("LogMessages", 1)
 		case events.Envelope_ContainerMetric:
-			a.stats["ContainerMetrics"]++
+			a.add("ContainerMetrics", 1)
 		case events.Envelope_ValueMetric:
-			a.stats["ValueMetrics"]++
+			a.add("ValueMetrics", 1)
 		}
-		a.stats["AvgEnvelopeSize"] = a.stats["TotalEnvelopeSize"] / a.stats["TotalMessages"]
-		GlobalStats.Store(a.stats)
 	}
+}
+
+func (a *Analyzer) add(key string, val int64) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	a.stats[key] += val
 }
 
 type AnalyzerOpts func(*Analyzer)
