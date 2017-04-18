@@ -20,7 +20,9 @@ var (
 func setup(t *testing.T) {
 	RegisterTestingT(t)
 	envelopes = make(chan *events.Envelope, 100)
-	printer = &mockPrinter{}
+	printer = &mockPrinter{
+		Counts: make(chan Stats, 100),
+	}
 	analyzer = NewAnalyzer(
 		envelopes,
 		printer,
@@ -32,14 +34,14 @@ func TestCountsTotal(t *testing.T) {
 	setup(t)
 
 	go analyzer.Start()
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 500; i++ {
 		envelopes <- buildEnvelope(events.Envelope_LogMessage)
 	}
 
 	f := func() int64 {
 		return atomic.LoadInt64(&printer.Total)
 	}
-	Eventually(f).Should(BeEquivalentTo(5))
+	Eventually(f).Should(BeEquivalentTo(500))
 }
 
 func TestCountsLogMessages(t *testing.T) {
@@ -150,6 +152,27 @@ func TestTotalEnvelopeSize(t *testing.T) {
 	Eventually(getTotalEnvelopeSize).Should(BeEquivalentTo(expectedTotal))
 }
 
+func TestTotalCountEqualsSumOfEnvelopes(t *testing.T) {
+	setup(t)
+
+	go analyzer.Start()
+	for i := 0; i < 4; i++ {
+		envelopes <- buildEnvelope(events.Envelope_ValueMetric)
+		envelopes <- buildEnvelope(events.Envelope_LogMessage)
+		envelopes <- buildEnvelope(events.Envelope_CounterEvent)
+		envelopes <- buildEnvelope(events.Envelope_ContainerMetric)
+		envelopes <- buildEnvelope(events.Envelope_HttpStartStop)
+	}
+
+	var s Stats
+	Eventually(printer.Counts, "2s").Should(Receive(&s))
+	Expect(s["TotalMessages"]).To(
+		Equal(
+			s["LogMessages"] + s["CounterEvents"] + s["ContainerMetrics"] + s["ValueMetrics"] + s["HttpStartStops"],
+		),
+	)
+}
+
 func buildEnvelope(envtype events.Envelope_EventType) *events.Envelope {
 	return &events.Envelope{
 		Origin:    proto.String("some-origin"),
@@ -163,11 +186,9 @@ type mockPrinter struct {
 	CounterEvents     int64
 	ContainerMetrics  int64
 	ValueMetrics      int64
+	HttpStartStops    int64
 	TotalEnvelopeSize int64
-}
-
-func newMockPrinter() *mockPrinter {
-	return &mockPrinter{}
+	Counts            chan Stats
 }
 
 func (p *mockPrinter) Print(s Stats) {
@@ -176,5 +197,7 @@ func (p *mockPrinter) Print(s Stats) {
 	atomic.StoreInt64(&p.CounterEvents, s["CounterEvents"])
 	atomic.StoreInt64(&p.ContainerMetrics, s["ContainerMetrics"])
 	atomic.StoreInt64(&p.ValueMetrics, s["ValueMetrics"])
+	atomic.StoreInt64(&p.HttpStartStops, s["HttpStartStops"])
 	atomic.StoreInt64(&p.TotalEnvelopeSize, s["TotalEnvelopeSize"])
+	p.Counts <- s
 }

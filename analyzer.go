@@ -52,19 +52,26 @@ func (a *Analyzer) Start() {
 	}()
 
 	for e := range a.messages {
-		a.add("TotalMessages", 1)
 		a.add("TotalEnvelopeSize", int64(e.Size()))
 		switch e.GetEventType() {
 		case events.Envelope_CounterEvent:
-			a.add("CounterEvents", 1)
+			a.incr("CounterEvents")
 		case events.Envelope_LogMessage:
-			a.add("LogMessages", 1)
+			a.incr("LogMessages")
 		case events.Envelope_ContainerMetric:
-			a.add("ContainerMetrics", 1)
+			a.incr("ContainerMetrics")
 		case events.Envelope_ValueMetric:
-			a.add("ValueMetrics", 1)
+			a.incr("ValueMetrics")
 		}
 	}
+}
+
+func (a *Analyzer) incr(key string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	a.stats["TotalMessages"]++
+	a.stats[key]++
 }
 
 func (a *Analyzer) add(key string, val int64) {
